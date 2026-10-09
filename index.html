@@ -420,6 +420,18 @@ details.more[open] summary{margin-bottom:12px}
 .acct.big{padding:0}
 @media (max-width:860px){ .mp-row{grid-template-columns:1fr 1fr;} .mp-row > input[data-mk=name]{grid-column:1/-1} }
 
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:34px 18px;border:1.5px dashed var(--line);border-radius:14px;background:var(--surface-2);cursor:pointer}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.thumbs{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.thumb{position:relative;width:120px;height:86px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.thumb img{width:100%;height:100%;object-fit:cover;object-position:top}
+.thumb .icon-btn{position:absolute;top:4px;right:4px;width:24px;height:24px;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.reading{display:flex;flex-direction:column;align-items:center;gap:8px;padding:44px 10px;text-align:center}
+.spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite;margin-bottom:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.imp-tbl td{padding:6px 8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
 </style>
 </head>
 <body>
@@ -1009,7 +1021,7 @@ function editGrade(id, preset = {}) {
   const g = id ? state.grades.find(x => x.id === id) : null;
   if (!g && needCourses(() => editGrade(null, preset))) return;
   const c = course(g?.courseId || preset.courseId);
-  const catList = c && c.gradingMode === 'weighted' && categoriesOf(c).length ? [...new Set(categoriesOf(c).map(x => x.name).concat(GRADE_CATS))] : GRADE_CATS;
+  const catList = [...new Set((c && c.gradingMode === 'weighted' ? categoriesOf(c).map(x => x.name) : []).concat(g?.category ? [g.category] : [], GRADE_CATS))];
   const fields = [
     { name: 'name', label: 'Assignment name', required: true, full: true, ph: 'Unit 2 Test', autofocus: true },
     { name: 'courseId', label: 'Course', type: 'select', options: courseOpts(), required: true },
@@ -1116,7 +1128,7 @@ function toggleFab(open) {
   $('.fab-menu')?.remove(); fab.setAttribute('aria-expanded', open);
   if (!open) return;
   const menu = document.createElement('div'); menu.className = 'fab-menu'; menu.setAttribute('role', 'menu');
-  const items = [['hw', 'Homework', () => editAssignment()], ['grade', 'Grade', () => editGrade()], ['clock', 'Schedule item', () => editSchedule()], ['cal', 'Event or test', () => editEvent()], ['book', 'Course', () => editCourse()], ['star', 'Extracurricular', () => editActivity()]];
+  const items = [['hw', 'Homework', () => editAssignment()], ['grade', 'Grade', () => editGrade()], ['copy', 'Grades from Schoology', () => importGrades(route().name === 'course' ? route().arg : ui.gradeCourse)], ['clock', 'Schedule item', () => editSchedule()], ['cal', 'Event or test', () => editEvent()], ['book', 'Course', () => editCourse()], ['star', 'Extracurricular', () => editActivity()]];
   menu.innerHTML = items.map(([i, l], n) => `<button role="menuitem" data-i="${n}">${icon(i)}${l}</button>`).join('');
   document.body.appendChild(menu);
   $$('button', menu).forEach(b => b.onclick = () => { toggleFab(false); items[+b.dataset.i][2](); });
@@ -1156,7 +1168,7 @@ function emptyState(title, text, btnLabel, action) {
 }
 const ACTIONS = {
   addHw: () => editAssignment(), addGrade: () => editGrade(), addSched: () => editSchedule(), addEvent: () => editEvent(), addCourse: () => editCourse(),
-  addActivity: () => editActivity(), planDay: () => planDay(ui.schedDate || todayISO()), planWeek: () => planWeek(weekStartOf(ui.schedDate || todayISO())), classTimes: () => classTimes(),
+  addActivity: () => editActivity(), importGrades: () => importGrades(ui.gradeCourse), planDay: () => planDay(ui.schedDate || todayISO()), planWeek: () => planWeek(weekStartOf(ui.schedDate || todayISO())), classTimes: () => classTimes(),
 };
 document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && ACTIONS[b.dataset.act]) ACTIONS[b.dataset.act](b); });
 
@@ -1329,7 +1341,7 @@ function viewCourse(id) {
     <div><h1>${c.icon ? esc(c.icon) + ' ' : ''}${esc(c.name)}</h1>
       <div class="kv">${c.teacher ? `<span><b>Teacher</b> ${esc(c.teacher)}</span>` : ''}${c.period ? `<span><b>Period</b> ${esc(c.period)}</span>` : ''}${c.room ? `<span><b>Room</b> ${esc(c.room)}</span>` : ''}<span><b>Type</b> ${esc(c.type)}</span><span><b>Credits</b> ${num(c.credits) ?? 1}</span></div>
       ${times.length ? `<div class="kv">${times.map(s => `<span><b>${s.days.map(d => DAY_SHORT[d]).join(' ')}</b> ${fmtTimeShort(s.start)}–${fmtTimeShort(s.end)}</span>`).join('')}</div>` : ''}
-      <div class="actions" style="margin-top:14px"><button class="btn sm primary" data-cact="hw">${icon('plus')}Homework</button><button class="btn sm" data-cact="grade">${icon('plus')}Grade</button><button class="btn sm" data-cact="event">${icon('plus')}Test or event</button><button class="btn sm" data-cact="edit">${icon('edit')}Edit course</button></div>
+      <div class="actions" style="margin-top:14px"><button class="btn sm primary" data-cact="hw">${icon('plus')}Homework</button><button class="btn sm" data-cact="grade">${icon('plus')}Grade</button><button class="btn sm" data-cact="imp">${icon('copy')}Import grades</button><button class="btn sm" data-cact="event">${icon('plus')}Test or event</button><button class="btn sm" data-cact="edit">${icon('edit')}Edit course</button></div>
     </div>
     <div class="bigstat" style="text-align:right"><div style="margin-bottom:6px">${mpSwitcher()}</div><div class="k">${esc(scopeLabel())}</div><div class="v">${avg == null ? (c.letterOverride || '–') : avg.toFixed(1) + '%'}</div><div class="k">${avg != null ? letterFor(avg) + (c.letterOverride ? ` (final set to ${esc(c.letterOverride)})` : '') : c.letterOverride ? 'Final letter' : 'Add grades to see your average'}</div></div>
   </div>
@@ -1358,7 +1370,7 @@ function bindCourse(id) {
   $$('[data-cact]').forEach(b => b.onclick = () => {
     const k = b.dataset.cact;
     if (k === 'hw') editAssignment(null, { courseId: id }); if (k === 'grade') editGrade(null, { courseId: id }); if (k === 'event') editEvent(null, { courseId: id });
-    if (k === 'edit') editCourse(id); if (k === 'cats') editCategories(id); if (k === 'gb') { ui.gradeCourse = id; go('grades'); }
+    if (k === 'imp') importGrades(id); if (k === 'edit') editCourse(id); if (k === 'cats') editCategories(id); if (k === 'gb') { ui.gradeCourse = id; go('grades'); }
   });
 }
 
@@ -1654,7 +1666,7 @@ function viewGrades() {
   if (!cs.length) return `<div class="page-head"><div><h1>Grades</h1></div></div><div class="empty-big"><h3>No courses to grade yet</h3><p>Add a course, then enter each graded assignment. Averages, category breakdowns and your GPA are calculated for you.</p><button class="btn primary" data-act="addCourse">${icon('plus')}Add course</button></div>`;
   if (!course(ui.gradeCourse)) ui.gradeCourse = cs[0].id;
   const c = course(ui.gradeCourse); const avg = courseAvg(c); const sc = viewScope(); const showMp = mps().length && sc === 'final'; const gs = gradesFor(c.id).filter(g => sc === 'final' || gradeMP(g) === sc).sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.created || 0) - (a.created || 0));
-  return `<div class="page-head"><div><h1>Grades</h1><p>Enter grades by hand. Averages update instantly.</p></div><div class="actions">${mpSwitcher()}<button class="btn primary" data-gadd>${icon('plus')}Add grade</button></div></div>
+  return `<div class="page-head"><div><h1>Grades</h1><p>Enter grades by hand. Averages update instantly.</p></div><div class="actions">${mpSwitcher()}<button class="btn" data-act="importGrades">${icon('copy')}Import from Schoology</button><button class="btn primary" data-gadd>${icon('plus')}Add grade</button></div></div>
   <div class="tabs" role="tablist">${cs.map(x => { const a = courseAvg(x); return `<button role="tab" aria-selected="${x.id === c.id}" data-gc="${x.id}"><i class="cdot" style="background:${x.color}"></i>${esc(x.name)} <span class="muted">${a == null ? '' : a.toFixed(1) + '%'}</span></button>`; }).join('')}</div>
   <div class="grid g3" style="margin-bottom:18px">
     <section class="card"><div class="bigstat"><div class="k">${mps().length ? esc(scopeLabel()) : 'Course average'}</div><div class="v">${fmtPct(avg)}</div><div class="k">${avg == null ? 'No grades yet' : letterFor(avg) + ' · ' + gs.length + ' grade' + (gs.length === 1 ? '' : 's')}</div></div></section>
@@ -1965,6 +1977,229 @@ function bindMpSettings() {
   const fm = $('[data-finalm]'); if (fm) fm.onchange = () => { s.finalMethod = fm.value; save(); renderSoon(); };
 }
 
+/* ========== Import grades from a Schoology screenshot ========== */
+let SAMPLE = null, SAMPLE_LIMITS = null;
+async function initSample() {
+  try {
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    SAMPLE = await window.claude.use('sample');
+    if (SAMPLE) SAMPLE_LIMITS = await SAMPLE.limits().catch(() => null);
+  } catch (e) { SAMPLE = null; }
+}
+const normCat = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '').replace(/(es|s)$/, '');
+const normName = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+const isISO = s => /^\d{4}-\d{2}-\d{2}$/.test(s || '') && !isNaN(parseISO(s));
+function matchMP(text) {
+  if (!text || !mps().length) return '';
+  const t = String(text).toLowerCase().replace(/\s+/g, '');
+  const exact = mps().find(m => m.name.toLowerCase().replace(/\s+/g, '') === t); if (exact) return exact.id;
+  const hit = mps().find(m => { const n = m.name.toLowerCase().replace(/\s+/g, ''); return t.includes(n) || n.includes(t); });
+  if (hit) return hit.id;
+  const qm = t.match(/(?:quarter|q|marking ?period|mp|semester|sem|s|trimester|t)(\d)/); if (qm) { const d = qm[1]; const h = mps().find(m => m.name.replace(/\D/g, '') === d); if (h) return h.id; }
+  return '';
+}
+function importPrompt(c, mode, text) {
+  return `You are reading a student's grade report from Schoology, a school learning management system, for the course "${c.name}". ${mode === 'image' ? 'The attached screenshot(s) show the course grades page. Several screenshots may be overlapping scrolled parts of the same page.' : 'Below is text copied from the course grades page.'}
+Today's date is ${todayISO()}.
+
+Schoology groups assignments under category headers such as "Tests (50%)" or "Homework 20%", and sometimes under grading period headers such as "Q1", "Quarter 1" or "Semester 1". Each assignment row shows its name, often a due date, and a score such as "18 / 20", "18/20", "90%" or a letter.
+
+Extract every assignment row, following these rules:
+- earned and possible are numbers. "18 / 20" means earned 18, possible 20. If only a percent is shown, use possible 100 and earned equal to the percent. Keep extra credit (earned above possible) as shown.
+- A row marked Missing gets status "missing", with the score shown (often 0) or null if none is shown.
+- A row with no score yet gets status "ungraded" and earned null. An excused row ("EX", "Excused") gets status "excused" and earned null.
+- Every other scored row gets status "graded".
+- Dates become YYYY-MM-DD. If no year is shown, choose the year that makes the date fall in the current school year (on or before today if it already has a score). Use null if there is no date.
+- category is the category header the row sits under, or null. period is the grading period header it sits under, or null.
+- Merge rows repeated across overlapping screenshots into one. Copy names exactly as written. Never invent rows.
+- categories lists each category header with its weight percent if one is shown, otherwise weight null.
+- overallPercent is the overall course grade percent shown for the course, or null.
+
+Reply with only JSON in exactly this shape:
+{"courseTitle": "AP Biology", "overallPercent": 91.4, "categories": [{"name": "Tests", "weight": 50}], "assignments": [{"name": "Unit 2 Test", "category": "Tests", "period": "Q1", "earned": 42, "possible": 50, "date": "2026-10-02", "status": "graded"}]}${mode === 'text' ? `\n\nCopied text:\n"""\n${text}\n"""` : ''}`;
+}
+const IMPORT_ERRORS = {
+  not_granted: 'This page wasn\'t allowed to use Claude. Choose Allow when asked to import grades.',
+  rate_limited: 'Too many requests right now. Wait a minute, then try again.',
+  queue_overflow: 'Too many requests right now. Wait a minute, then try again.',
+  invalid_json: 'Couldn\'t find grades in that. Try a clearer screenshot of the grades page, or paste the text instead.',
+  empty_completion: 'Couldn\'t find grades in that. Try a clearer screenshot of the grades page, or paste the text instead.',
+  refused: 'Couldn\'t read that image. Try a screenshot of just the grades page.',
+  image_rejected: 'That file type isn\'t supported. Use a PNG or JPG screenshot.',
+  images_unavailable: 'Screenshot reading isn\'t available here. Use Paste text instead.',
+  prompt_too_large: 'That\'s too much text at once. Paste one course at a time.',
+  session_expired: 'Your Claude session expired. Reload the page and try again.',
+};
+
+function importGrades(courseId) {
+  if (needCourses(() => importGrades())) return;
+  const canImg = !!(SAMPLE && SAMPLE_LIMITS && SAMPLE_LIMITS.images);
+  const st = { step: 'pick', courseId: course(courseId)?.id || course(ui.gradeCourse)?.id || sortedCourses()[0].id, mode: canImg || !SAMPLE ? 'image' : 'text', files: [], text: '', rows: [], cats: [], overall: null, title: null, applyWeights: true, period: 'auto', ctl: null, err: '' };
+  const m = openModal({ title: 'Import grades from Schoology', wide: true, body: '<div id="imp"></div>', foot: '<div id="imp-f" class="row wrap-row" style="width:100%;justify-content:flex-end;gap:8px"></div>' });
+  const body = $('#imp', m), foot = $('#imp-f', m);
+  const urls = new Map();
+  const thumb = f => { if (!urls.has(f)) urls.set(f, URL.createObjectURL(f)); return urls.get(f); };
+  const addFiles = list => {
+    const max = SAMPLE_LIMITS?.images?.maxCount || 5, maxB = SAMPLE_LIMITS?.images?.maxInputBytes || 20e6, types = SAMPLE_LIMITS?.images?.mediaTypes || ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+    let skipped = 0;
+    for (const f of list) { if (!types.includes(f.type) || f.size > maxB) { skipped++; continue; } if (st.files.length < max) st.files.push(f); else skipped++; }
+    if (skipped) toast(st.files.length >= max ? `Up to ${max} screenshots at a time` : 'Some files were skipped. Use PNG or JPG screenshots.');
+    draw();
+  };
+  const onPaste = e => {
+    if (!m.isConnected) { document.removeEventListener('paste', onPaste); return; }
+    if (st.step !== 'pick' || st.mode !== 'image') return;
+    const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
+    if (fs.length) { e.preventDefault(); addFiles(fs); }
+  };
+  document.addEventListener('paste', onPaste);
+  const c = () => course(st.courseId);
+
+  function buildRows(res) {
+    const crs = c(); const existing = gradesFor(crs.id);
+    const known = crs.gradingMode === 'weighted' ? categoriesOf(crs).map(x => x.name) : [];
+    st.cats = (Array.isArray(res.categories) ? res.categories : []).filter(x => x && x.name).map(x => ({ name: String(x.name).trim(), weight: num(x.weight) }));
+    const mapCat = name => { if (!name) return 'Other'; const k = known.find(n => normCat(n) === normCat(name)); return k || String(name).trim(); };
+    st.overall = num(res.overallPercent); st.title = res.courseTitle || null;
+    const seen = new Set();
+    st.rows = (Array.isArray(res.assignments) ? res.assignments : []).filter(a => a && a.name).map(a => {
+      const earned = num(a.earned), possible = num(a.possible); const status = ['graded', 'missing', 'excused', 'ungraded'].includes(a.status) ? a.status : 'graded';
+      const key = normName(a.name) + '|' + earned + '|' + possible; if (seen.has(key)) return null; seen.add(key);
+      const dup = existing.find(g => normName(g.name) === normName(a.name));
+      const usable = earned != null && possible > 0 && status !== 'excused' && status !== 'ungraded';
+      const same = dup && num(dup.earned) === earned && num(dup.possible) === possible;
+      return { name: String(a.name).trim(), category: mapCat(a.category), earned: earned ?? '', possible: possible ?? '', date: isISO(a.date) ? a.date : '', periodText: a.period || '', mpId: matchMP(a.period), status, dup: dup?.id || null, include: usable && !same && status !== 'missing', same: !!same };
+    }).filter(Boolean);
+  }
+
+  async function read() {
+    const crs = c(); st.err = '';
+    if (st.mode === 'image' && !st.files.length) return;
+    if (st.mode === 'text' && st.text.trim().length < 20) { st.err = 'Paste the text from the Schoology grades page first.'; draw(); return; }
+    st.step = 'reading'; st.ctl = new AbortController(); draw();
+    try {
+      const res = await SAMPLE.json(importPrompt(crs, st.mode, st.text.trim()), { images: st.mode === 'image' ? st.files : undefined, signal: st.ctl.signal, modelTier: 'default' });
+      if (!m.isConnected) return;
+      if (!res || !Array.isArray(res.assignments)) throw { code: 'invalid_json' };
+      buildRows(res);
+      if (!st.rows.length) { st.step = 'pick'; st.err = 'No assignments were found. Make sure the screenshot shows the assignment list with scores.'; draw(); return; }
+      st.applyWeights = st.cats.some(x => x.weight) && !weightsMatch(); st.step = 'review'; draw();
+    } catch (e) {
+      if (!m.isConnected) return;
+      st.step = 'pick'; st.err = e && e.code === 'cancelled' ? '' : (IMPORT_ERRORS[e && e.code] || 'Something went wrong reading that. Try again in a moment.'); draw();
+    }
+  }
+  function weightsMatch() {
+    const crs = c(); if (crs.gradingMode !== 'weighted') return false;
+    const w = st.cats.filter(x => x.weight); return w.length && w.every(x => categoriesOf(crs).some(k => normCat(k.name) === normCat(x.name) && num(k.weight) === x.weight));
+  }
+  function plan() {
+    const crs = c(); const weighted = st.cats.filter(x => x.weight);
+    const target = st.applyWeights && weighted.length ? { ...crs, gradingMode: 'weighted', categories: weighted.map(x => ({ name: x.name, weight: x.weight })) } : crs;
+    const inc = st.rows.filter(r => r.include && num(r.earned) != null && num(r.possible) > 0);
+    const exclude = new Set(inc.filter(r => r.dup).map(r => r.dup));
+    const extra = inc.map(r => ({ category: target === crs ? r.category : (target.categories.find(k => normCat(k.name) === normCat(r.category))?.name || r.category), earned: num(r.earned), possible: num(r.possible) }));
+    const after = courseRaw(target, extra, exclude);
+    return { inc, after, nNew: inc.filter(r => !r.dup).length, nUpd: inc.filter(r => r.dup).length };
+  }
+  function summaryHTML() {
+    const p = plan();
+    const diff = st.overall != null && p.after != null ? Math.abs(st.overall - p.after) : null;
+    return `<div class="wi-result" style="gap:22px"><div><div class="tiny muted">Importing</div><div class="v">${p.inc.length}</div><div class="tiny muted">${p.nNew} new${p.nUpd ? `, ${p.nUpd} updated` : ''}</div></div>
+      ${st.overall != null ? `<div><div class="tiny muted">Schoology shows</div><div class="v">${st.overall.toFixed(1)}%</div></div>` : ''}
+      <div><div class="tiny muted">All grades in the planner</div><div class="v">${fmtPct(p.after)}</div></div>
+      ${diff != null ? `<div class="small" style="flex-basis:100%;${diff <= 0.6 ? 'color:var(--ok)' : 'color:var(--warn)'}">${diff <= 0.6 ? 'Matches Schoology.' : 'Doesn\'t match Schoology yet. Check the category weights, scores, or any rows left unchecked. If Schoology shows only one grading period, the planner\'s total for all grades can differ.'}</div>` : ''}</div>`;
+  }
+  function draw() {
+    const crs = c();
+    if (st.step === 'pick') {
+      body.innerHTML = `
+        <div class="form-grid" style="margin-bottom:14px"><label class="field"><span>Course</span><select id="imp-c">${opts(courseOpts(), st.courseId)}</select></label>
+        <div class="field"><span>Import from</span><div class="seg" role="group" aria-label="Import from"><button type="button" data-im="image" aria-pressed="${st.mode === 'image'}">Screenshot</button><button type="button" data-im="text" aria-pressed="${st.mode === 'text'}">Paste text</button></div></div></div>
+        ${!SAMPLE ? `<div class="alert warn" style="cursor:default;margin-bottom:12px"><span class="dot"></span>Reading grades uses Claude, so it only works while this planner is open in Claude. You can still add grades one at a time.</div>` : ''}
+        ${st.mode === 'image' ? (canImg ? `
+          <label class="drop" id="imp-drop" tabindex="0"><input type="file" accept="${(SAMPLE_LIMITS.images.mediaTypes || ['image/png', 'image/jpeg']).join(',')}" multiple hidden id="imp-file">
+            <b>Drop screenshots here, or choose files</b><span class="small muted">You can also paste a screenshot with Ctrl+V (Cmd+V on Mac). For a long list, add a few screenshots as you scroll.</span></label>
+          ${st.files.length ? `<div class="thumbs">${st.files.map((f, i) => `<div class="thumb"><img src="${thumb(f)}" alt="Screenshot ${i + 1}"><button class="icon-btn" data-rmf="${i}" aria-label="Remove screenshot ${i + 1}">${icon('x')}</button></div>`).join('')}</div>` : ''}`
+          : SAMPLE ? `<div class="empty">Screenshots can't be read in this view. Switch to Paste text.</div>` : '')
+        : `<label class="field"><span>Schoology grades text</span><textarea id="imp-text" rows="9" placeholder="Open the course's grades page in Schoology, select everything (Ctrl+A), copy (Ctrl+C), and paste it here.">${esc(st.text)}</textarea></label>`}
+        ${st.err ? `<p class="small" style="color:var(--danger);margin:12px 0 0">${esc(st.err)}</p>` : ''}
+        <p class="tiny muted" style="margin:12px 0 0">You'll review everything before it's added. Nothing changes until you choose Import.</p>`;
+      const ready = SAMPLE && (st.mode === 'image' ? st.files.length : st.text.trim().length);
+      foot.innerHTML = `<button class="btn" data-x>Cancel</button><button class="btn primary" data-read ${ready ? '' : 'disabled'}>Read grades</button>`;
+      $('#imp-c', m).onchange = e => { st.courseId = e.target.value; };
+      $$('[data-im]', m).forEach(b => b.onclick = () => { st.mode = b.dataset.im; st.err = ''; draw(); });
+      const file = $('#imp-file', m); if (file) file.onchange = () => { addFiles([...file.files]); };
+      const drop = $('#imp-drop', m);
+      if (drop) {
+        drop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
+        drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+        drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+        drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); });
+      }
+      $$('[data-rmf]', m).forEach(b => b.onclick = () => { st.files.splice(+b.dataset.rmf, 1); draw(); });
+      const ta = $('#imp-text', m); if (ta) ta.oninput = () => { st.text = ta.value; $('[data-read]', m).disabled = !(SAMPLE && ta.value.trim().length); };
+      $('[data-x]', m).onclick = closeModal; $('[data-read]', m).onclick = read;
+    } else if (st.step === 'reading') {
+      body.innerHTML = `<div class="reading"><div class="spinner" aria-hidden="true"></div><b>Reading your ${esc(crs.name)} grades…</b><span class="small muted">This usually takes 20 to 60 seconds.</span></div>`;
+      foot.innerHTML = '<button class="btn" data-stop>Stop</button>';
+      $('[data-stop]', m).onclick = () => st.ctl?.abort();
+    } else {
+      const weighted = st.cats.filter(x => x.weight);
+      const catNames = [...new Set((st.applyWeights && weighted.length ? weighted.map(x => x.name) : crs.gradingMode === 'weighted' ? categoriesOf(crs).map(x => x.name) : []).concat(st.rows.map(r => r.category), GRADE_CATS))];
+      const statusChip = r => r.same ? '<span class="chip">Already added</span>' : r.status === 'excused' ? '<span class="chip">Excused</span>' : r.status === 'ungraded' ? '<span class="chip">Not graded</span>' : r.status === 'missing' ? '<span class="chip overdue">Missing</span>' : r.dup ? '<span class="chip medium">Update</span>' : '<span class="chip done">New</span>';
+      body.innerHTML = `
+        <div id="imp-sum">${summaryHTML()}</div>
+        ${weighted.length && !weightsMatch() ? `<label class="switch" style="margin-top:12px"><input type="checkbox" id="imp-w" ${st.applyWeights ? 'checked' : ''}> Use Schoology's category weights for ${esc(crs.name)}: ${weighted.map(x => `${esc(x.name)} ${x.weight}%`).join(', ')}</label>` : ''}
+        ${mps().length ? `<label class="row small" style="margin-top:10px;gap:8px"><span class="strong">Marking period</span><select id="imp-mp" style="width:auto">${opts([['auto', 'Match Schoology\'s periods, otherwise use dates']].concat(mps().map(x => [x.id, `Put all in ${x.name}`])), st.period)}</select></label>` : ''}
+        ${st.title && normName(st.title) !== normName(crs.name) ? `<p class="small" style="color:var(--warn);margin:10px 0 0">The screenshot looks like it's for "${esc(st.title)}". Check it's the right course before importing.</p>` : ''}
+        <div class="row between" style="margin:16px 0 6px"><b>Assignments found</b><span class="row small"><button class="btn sm ghost" data-all="1">Select all</button><button class="btn sm ghost" data-all="0">Select none</button></span></div>
+        <div class="tbl-wrap"><table class="tbl imp-tbl"><thead><tr><th></th><th>Assignment</th><th>Category</th><th class="num">Score</th><th class="num">%</th><th>Date</th><th></th></tr></thead><tbody>
+          ${st.rows.map((r, i) => { const pc = num(r.earned) != null && num(r.possible) > 0 ? num(r.earned) / num(r.possible) * 100 : null; const old = r.dup ? state.grades.find(g => g.id === r.dup) : null;
+            return `<tr data-r="${i}"><td><input type="checkbox" data-f="include" ${r.include ? 'checked' : ''} aria-label="Import ${esc(r.name)}" style="width:17px;height:17px;accent-color:var(--accent)"></td>
+            <td><input type="text" data-f="name" value="${esc(r.name)}" aria-label="Assignment name" style="min-width:170px">${old && !r.same ? `<div class="tiny muted">Now ${+num(old.earned)}/${+num(old.possible)}</div>` : ''}</td>
+            <td><input type="text" list="imp-cats" data-f="category" value="${esc(r.category)}" aria-label="Category" style="width:120px"></td>
+            <td class="num" style="white-space:nowrap"><input type="number" step="any" data-f="earned" value="${esc(r.earned)}" aria-label="Points earned" style="width:66px"> / <input type="number" step="any" data-f="possible" value="${esc(r.possible)}" aria-label="Points possible" style="width:66px"></td>
+            <td class="num" data-pc>${fmtPct(pc)}</td>
+            <td><input type="date" data-f="date" value="${r.date}" aria-label="Date" style="width:140px"></td><td>${statusChip(r)}</td></tr>`; }).join('')}
+        </tbody></table></div><datalist id="imp-cats">${catNames.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+        <p class="tiny muted" style="margin:10px 0 0">Missing, excused and ungraded rows start unchecked. Check a missing row to count it as the score shown. Rows without a date use today's date.</p>`;
+      foot.innerHTML = `<button class="btn" data-back style="margin-right:auto">Start over</button><button class="btn" data-x>Cancel</button><button class="btn primary" data-go-imp>Import ${plan().inc.length} grade${plan().inc.length === 1 ? '' : 's'}</button>`;
+      const refresh = () => { $('#imp-sum', m).innerHTML = summaryHTML(); const n = plan().inc.length; $('[data-go-imp]', m).textContent = `Import ${n} grade${n === 1 ? '' : 's'}`; $('[data-go-imp]', m).disabled = !n; };
+      $$('tr[data-r] [data-f]', m).forEach(inp => inp.addEventListener(inp.type === 'checkbox' ? 'change' : 'input', () => {
+        const tr = inp.closest('tr'); const r = st.rows[+tr.dataset.r]; const f = inp.dataset.f;
+        r[f] = inp.type === 'checkbox' ? inp.checked : inp.value;
+        if (f === 'earned' || f === 'possible') { const pc = num(r.earned) != null && num(r.possible) > 0 ? num(r.earned) / num(r.possible) * 100 : null; $('[data-pc]', tr).textContent = fmtPct(pc); }
+        refresh();
+      }));
+      const w = $('#imp-w', m); if (w) w.onchange = () => { st.applyWeights = w.checked; refresh(); };
+      const mp = $('#imp-mp', m); if (mp) mp.onchange = () => { st.period = mp.value; };
+      $$('[data-all]', m).forEach(b => b.onclick = () => { st.rows.forEach(r => { r.include = b.dataset.all === '1' && num(r.earned) != null && num(r.possible) > 0; }); draw(); });
+      $('[data-back]', m).onclick = () => { st.step = 'pick'; st.rows = []; draw(); };
+      $('[data-x]', m).onclick = closeModal;
+      $('[data-go-imp]', m).onclick = commit;
+      refresh();
+    }
+  }
+  function commit() {
+    const crs = c(); const p = plan(); if (!p.inc.length) return;
+    const bad = p.inc.find(r => !String(r.name).trim()); if (bad) { toast('Every imported grade needs a name'); return; }
+    const snap = snapshot();
+    const weighted = st.cats.filter(x => x.weight);
+    if (st.applyWeights && weighted.length && !weightsMatch()) { crs.gradingMode = 'weighted'; crs.categories = weighted.map(x => ({ name: x.name, weight: x.weight })); }
+    const catFor = name => crs.gradingMode === 'weighted' ? (categoriesOf(crs).find(k => normCat(k.name) === normCat(name))?.name || name) : name;
+    for (const r of p.inc) {
+      const data = { courseId: crs.id, name: String(r.name).trim(), category: catFor(String(r.category || 'Other').trim()), earned: num(r.earned), possible: num(r.possible), date: isISO(r.date) ? r.date : todayISO(), mpId: st.period === 'auto' ? (r.mpId || '') : st.period, source: 'schoology' };
+      const ex = r.dup && state.grades.find(g => g.id === r.dup);
+      if (ex) Object.assign(ex, data); else state.grades.push({ id: uid(), created: Date.now(), notes: '', ...data });
+    }
+    save(); closeModal(); ui.gradeCourse = crs.id;
+    if (route().name === 'grades') render(); else go('grades');
+    toast(`Imported ${p.inc.length} grade${p.inc.length === 1 ? '' : 's'} into ${crs.name}`, () => restore(snap));
+  }
+  draw();
+}
+
 /* ========== Init ========== */
 (function init() {
   loadLocal(); applyTheme();
@@ -1976,7 +2211,7 @@ function bindMpSettings() {
   $('#fab').onclick = () => toggleFab();
   window.addEventListener('hashchange', () => { closeSheet(); render(); });
   render(); renderAccount();
-  initCloud();
+  initCloud(); initSample();
   setInterval(() => { const r = route().name; if (!modalStack.length && !document.activeElement?.matches('input,select,textarea') && ['dashboard', 'schedule', 'calendar', ''].includes(r)) render(); }, 60000);
 })();
 </script>
