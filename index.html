@@ -432,6 +432,28 @@ details.more[open] summary{margin-bottom:12px}
 .imp-tbl td{padding:6px 8px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 
+.askbar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 6px 6px 14px;margin-bottom:12px}
+.askbar svg{width:18px;height:18px;color:var(--accent);display:block}
+.askbar input{border:0;padding:8px 0;flex:1;background:transparent;min-width:0}
+.askbar input:focus{box-shadow:none}
+.chat{max-width:820px;margin:0 auto;display:flex;flex-direction:column}
+.chat-log{display:flex;flex-direction:column;gap:12px;min-height:44vh;max-height:calc(100vh - 300px);overflow-y:auto;padding:4px 2px 12px}
+.msg{max-width:85%;padding:11px 15px;border-radius:16px;line-height:1.5;overflow-wrap:anywhere}
+.msg p{margin:0 0 6px}.msg p:last-child{margin:0}
+.msg ul{margin:4px 0 6px;padding-left:20px}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:5px;white-space:pre-wrap}
+.msg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:5px}
+.did{margin-top:10px;padding-top:8px;border-top:1px solid var(--line-2);font-size:13px;color:var(--ok);display:grid;gap:3px;justify-items:start}
+.did .btn{margin-top:6px}
+.chat-empty{margin:auto;text-align:center;padding:30px 10px;max-width:520px}
+.sugg{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip-btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:13.5px;cursor:pointer;font-weight:500}
+.chip-btn:hover{border-color:var(--accent);color:var(--accent)}
+.chat-in{display:flex;gap:8px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px}
+.chat-in textarea{border:0;resize:none;min-height:38px;max-height:160px;padding:8px 6px;background:transparent}
+.chat-in textarea:focus{box-shadow:none}
+@media (max-width:860px){ .chat-log{max-height:calc(100vh - 330px)} .msg{max-width:92%} }
+
 </style>
 </head>
 <body>
@@ -771,6 +793,7 @@ const IC = {
   chart: '<path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-6"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   x: '<path d="M6 6l12 12M18 6 6 18"/>',
@@ -786,7 +809,7 @@ const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const NAV = [
   ['dashboard', 'Dashboard', 'home'], ['homework', 'Homework', 'hw'], ['upcoming', 'Upcoming', 'up'], ['schedule', 'Schedule', 'clock'],
   ['calendar', 'Calendar', 'cal'], ['grades', 'Grades', 'grade'], ['gpa', 'GPA Calculator', 'calc'], ['courses', 'Courses', 'book'],
-  ['activities', 'Extracurriculars', 'star'], ['analytics', 'Analytics', 'chart'], ['settings', 'Settings', 'gear']];
+  ['activities', 'Extracurriculars', 'star'], ['assistant', 'Assistant', 'spark'], ['analytics', 'Analytics', 'chart'], ['settings', 'Settings', 'gear']];
 function route() {
   const h = location.hash.replace(/^#\/?/, '') || 'dashboard';
   const [path, qs] = h.split('?'); const parts = path.split('/');
@@ -1218,6 +1241,7 @@ function viewDashboard() {
       <div><div class="k">Incomplete</div><div class="v">${open.length}</div></div>
     </div>
   </div>
+  ${SAMPLE ? `<form class="askbar" id="askbar"><span aria-hidden="true">${icon('spark')}</span><input type="text" id="askbar-in" placeholder="Ask your planner, or tell it what to add" aria-label="Ask the assistant"><button class="btn sm primary">Ask</button></form>` : ''}
   <div class="quick">
     <button class="btn primary" data-act="addHw">${icon('plus')}Homework</button><button class="btn" data-act="addGrade">${icon('plus')}Grade</button>
     <button class="btn" data-act="addEvent">${icon('plus')}Event or test</button><button class="btn" data-act="planDay">${icon('clock')}Plan my day</button>
@@ -1943,8 +1967,9 @@ function render() {
     case 'course': html = viewCourse(r.arg); bind = () => bindCourse(r.arg); break;
     case 'activities': html = viewActivities(); bind = bindActivities; break;
     case 'analytics': html = viewAnalytics(); break;
+    case 'assistant': html = viewAssistant(); bind = bindAssistant; break;
     case 'settings': html = viewSettings(); bind = bindSettings; break;
-    default: html = viewDashboard();
+    default: html = viewDashboard(); bind = bindDashboard;
   }
   v.innerHTML = `<div class="wrap">${html}</div>`;
   bind && bind();
@@ -1976,6 +2001,8 @@ function bindMpSettings() {
     if (s.markingPeriods.length) confirmBox('Replace your current marking periods with this preset? Report card grades entered for the old periods will no longer show.', 'Replace periods', apply); else apply(); };
   const fm = $('[data-finalm]'); if (fm) fm.onchange = () => { s.finalMethod = fm.value; save(); renderSoon(); };
 }
+
+function bindDashboard() { const f = $('#askbar'); if (f) f.onsubmit = e => { e.preventDefault(); const v = $('#askbar-in').value.trim(); if (!v) return; go('assistant'); askAssistant(v); }; }
 
 /* ========== Import grades from a Schoology screenshot ========== */
 let SAMPLE = null, SAMPLE_LIMITS = null;
@@ -2034,7 +2061,7 @@ const IMPORT_ERRORS = {
 function importGrades(courseId) {
   if (needCourses(() => importGrades())) return;
   const canImg = !!(SAMPLE && SAMPLE_LIMITS && SAMPLE_LIMITS.images);
-  const st = { step: 'pick', courseId: course(courseId)?.id || course(ui.gradeCourse)?.id || sortedCourses()[0].id, mode: canImg || !SAMPLE ? 'image' : 'text', files: [], text: '', rows: [], cats: [], overall: null, title: null, applyWeights: true, period: 'auto', ctl: null, err: '' };
+  const st = { step: 'pick', courseId: course(courseId)?.id || course(ui.gradeCourse)?.id || sortedCourses()[0].id, mode: canImg ? 'image' : 'text', files: [], text: '', rows: [], cats: [], overall: null, title: null, applyWeights: true, period: 'auto', ctl: null, err: '' };
   const m = openModal({ title: 'Import grades from Schoology', wide: true, body: '<div id="imp"></div>', foot: '<div id="imp-f" class="row wrap-row" style="width:100%;justify-content:flex-end;gap:8px"></div>' });
   const body = $('#imp', m), foot = $('#imp-f', m);
   const urls = new Map();
@@ -2076,6 +2103,7 @@ function importGrades(courseId) {
     const crs = c(); st.err = '';
     if (st.mode === 'image' && !st.files.length) return;
     if (st.mode === 'text' && st.text.trim().length < 20) { st.err = 'Paste the text from the Schoology grades page first.'; draw(); return; }
+    if (st.mode === 'text') { const parsed = parseSchoologyText(st.text); if (parsed.assignments.length || !SAMPLE) { buildRows(parsed); if (!st.rows.length) { st.err = 'No assignments with scores were found in that text. Make sure you copied the course grades page.'; draw(); return; } st.applyWeights = st.cats.some(x => x.weight) && !weightsMatch(); st.step = 'review'; draw(); return; } }
     st.step = 'reading'; st.ctl = new AbortController(); draw();
     try {
       const res = await SAMPLE.json(importPrompt(crs, st.mode, st.text.trim()), { images: st.mode === 'image' ? st.files : undefined, signal: st.ctl.signal, modelTier: 'default' });
@@ -2116,16 +2144,16 @@ function importGrades(courseId) {
       body.innerHTML = `
         <div class="form-grid" style="margin-bottom:14px"><label class="field"><span>Course</span><select id="imp-c">${opts(courseOpts(), st.courseId)}</select></label>
         <div class="field"><span>Import from</span><div class="seg" role="group" aria-label="Import from"><button type="button" data-im="image" aria-pressed="${st.mode === 'image'}">Screenshot</button><button type="button" data-im="text" aria-pressed="${st.mode === 'text'}">Paste text</button></div></div></div>
-        ${!SAMPLE ? `<div class="alert warn" style="cursor:default;margin-bottom:12px"><span class="dot"></span>Reading grades uses Claude, so it only works while this planner is open in Claude. You can still add grades one at a time.</div>` : ''}
+        ${!SAMPLE && st.mode === 'image' ? `<div class="alert warn" style="cursor:default;margin-bottom:12px"><span class="dot"></span>Reading screenshots needs the AI, which isn't available in this view. Paste text works anywhere.</div>` : ''}
         ${st.mode === 'image' ? (canImg ? `
           <label class="drop" id="imp-drop" tabindex="0"><input type="file" accept="${(SAMPLE_LIMITS.images.mediaTypes || ['image/png', 'image/jpeg']).join(',')}" multiple hidden id="imp-file">
             <b>Drop screenshots here, or choose files</b><span class="small muted">You can also paste a screenshot with Ctrl+V (Cmd+V on Mac). For a long list, add a few screenshots as you scroll.</span></label>
           ${st.files.length ? `<div class="thumbs">${st.files.map((f, i) => `<div class="thumb"><img src="${thumb(f)}" alt="Screenshot ${i + 1}"><button class="icon-btn" data-rmf="${i}" aria-label="Remove screenshot ${i + 1}">${icon('x')}</button></div>`).join('')}</div>` : ''}`
-          : SAMPLE ? `<div class="empty">Screenshots can't be read in this view. Switch to Paste text.</div>` : '')
+          : `<div class="empty">Screenshots can't be read in this view. Switch to Paste text.</div>`)
         : `<label class="field"><span>Schoology grades text</span><textarea id="imp-text" rows="9" placeholder="Open the course's grades page in Schoology, select everything (Ctrl+A), copy (Ctrl+C), and paste it here.">${esc(st.text)}</textarea></label>`}
         ${st.err ? `<p class="small" style="color:var(--danger);margin:12px 0 0">${esc(st.err)}</p>` : ''}
         <p class="tiny muted" style="margin:12px 0 0">You'll review everything before it's added. Nothing changes until you choose Import.</p>`;
-      const ready = SAMPLE && (st.mode === 'image' ? st.files.length : st.text.trim().length);
+      const ready = st.mode === 'image' ? (SAMPLE && st.files.length) : st.text.trim().length;
       foot.innerHTML = `<button class="btn" data-x>Cancel</button><button class="btn primary" data-read ${ready ? '' : 'disabled'}>Read grades</button>`;
       $('#imp-c', m).onchange = e => { st.courseId = e.target.value; };
       $$('[data-im]', m).forEach(b => b.onclick = () => { st.mode = b.dataset.im; st.err = ''; draw(); });
@@ -2138,7 +2166,7 @@ function importGrades(courseId) {
         drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); addFiles([...e.dataTransfer.files]); });
       }
       $$('[data-rmf]', m).forEach(b => b.onclick = () => { st.files.splice(+b.dataset.rmf, 1); draw(); });
-      const ta = $('#imp-text', m); if (ta) ta.oninput = () => { st.text = ta.value; $('[data-read]', m).disabled = !(SAMPLE && ta.value.trim().length); };
+      const ta = $('#imp-text', m); if (ta) ta.oninput = () => { st.text = ta.value; $('[data-read]', m).disabled = !ta.value.trim().length; };
       $('[data-x]', m).onclick = closeModal; $('[data-read]', m).onclick = read;
     } else if (st.step === 'reading') {
       body.innerHTML = `<div class="reading"><div class="spinner" aria-hidden="true"></div><b>Reading your ${esc(crs.name)} grades…</b><span class="small muted">This usually takes 20 to 60 seconds.</span></div>`;
@@ -2198,6 +2226,150 @@ function importGrades(courseId) {
     toast(`Imported ${p.inc.length} grade${p.inc.length === 1 ? '' : 's'} into ${crs.name}`, () => restore(snap));
   }
   draw();
+}
+
+/* ========== Planner assistant ========== */
+const chat = { turns: [], busy: false, ctl: null, draft: '' };
+function findCourse(name) {
+  if (!name) return null; const n = normName(name);
+  return state.courses.find(c => normName(c.name) === n) || state.courses.find(c => normName(c.name).includes(n) || n.includes(normName(c.name)))
+    || state.courses.find(c => normName(c.name).split(' ').filter(w => w.length > 2).some(w => n.split(' ').includes(w)))
+    || (() => { const q = n.replace(/[^a-z0-9]/g, ''); const sub = (x, y) => { let i = 0; for (const ch of y) if (ch === x[i]) i++; return i === x.length; };
+      const hits = state.courses.filter(c => { const k = normName(c.name).replace(/[^a-z0-9]/g, ''); return q.length >= 3 && k[0] === q[0] && sub(q, k); }); return hits.length === 1 ? hits[0] : null; })();
+}
+function needCourse(name) { const c = findCourse(name); if (!c) throw new Error(`No course matches "${name}". Courses: ${state.courses.map(x => x.name).join(', ') || 'none yet'}.`); return c; }
+const validTime = t => /^\d{1,2}:\d{2}$/.test(t || '') ? t.padStart(5, '0') : '';
+function plannerSnapshot() {
+  const t = todayISO(); const g = withScope('final', () => computeGPA());
+  const days = Array.from({ length: 8 }, (_, i) => addDays(t, i));
+  return {
+    today: `${DAY_LONG[dow(t)]} ${t}`, nowTime: fromMin(nowMin()), student: state.settings.studentName || null,
+    schoolDay: `${state.settings.dayStart}-${state.settings.dayEnd}`,
+    currentMarkingPeriod: currentMP()?.name || null, markingPeriods: mps().map(m => ({ name: m.name, start: m.start, end: m.end, weight: m.weight })),
+    gpa: { weighted: g.weighted && +g.weighted.toFixed(3), unweighted: g.unweighted && +g.unweighted.toFixed(3), cumulativeWeighted: cumulativeGPA().weighted },
+    courses: sortedCourses().map(c => ({ name: c.name, teacher: c.teacher, period: c.period, type: c.type, credits: c.credits, grading: c.gradingMode === 'weighted' ? categoriesOf(c).map(x => `${x.name} ${x.weight}%`).join(', ') : 'total points',
+      finalAverage: courseAvg(c, [], null, 'final') == null ? null : +courseAvg(c, [], null, 'final').toFixed(2), currentPeriodAverage: currentMP() ? (courseAvg(c, [], null, currentMP().id) ?? null) : undefined,
+      categories: catBreakdown(c, 'final').filter(b => b.count).map(b => `${b.name}: ${b.earned}/${b.possible}`).join('; ') })),
+    openAssignments: workOrder(state.assignments.filter(a => !isDone(a))).slice(0, 80).map(a => ({ id: a.id, title: a.title, course: courseName(a.courseId), due: a.dueDate ? a.dueDate + (a.dueTime ? ' ' + a.dueTime : '') : null, priority: a.priority, status: a.status, overdue: isOverdue(a) || undefined, estMinutes: a.estMin || undefined, type: a.category })),
+    recentlyCompleted: state.assignments.filter(isDone).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)).slice(0, 15).map(a => ({ title: a.title, course: courseName(a.courseId), grade: a.grade || undefined })),
+    upcomingEvents: state.events.filter(e => e.date >= t && e.date <= addDays(t, 30)).sort((a, b) => a.date.localeCompare(b.date)).map(e => ({ title: e.title, type: e.type, date: e.date, time: e.time || undefined, course: courseName(e.courseId) || undefined })),
+    schedule: Object.fromEntries(days.map(d => [d, schedFor(d).map(s => `${s.start}-${s.end} ${s.title} (${s.category})`)])),
+    recentGrades: [...state.grades].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 25).map(x => ({ course: courseName(x.courseId), name: x.name, category: x.category, score: `${x.earned}/${x.possible}`, date: x.date })),
+    activities: state.activities.map(a => ({ name: a.name, role: a.role, meets: a.days?.length ? `${a.days.map(d => DAY_SHORT[d]).join(',')} ${a.start}-${a.end}` : undefined })),
+  };
+}
+const ASSIST_RULES = `You are the assistant built into a student's school planner app. The student entered everything in it by hand. Use the planner data below to answer questions about their homework, schedule, grades, GPA and activities, and to help them plan.
+Guidelines:
+- Be brief and friendly, like a helpful older student. Plain sentences or short lists. No headings. Never use em dashes.
+- Only state facts that are in the planner data or that you computed from it. If something isn't there, say so.
+- When asked to add, schedule, complete or record something, use the tools. Add only what the student asked for; never invent homework or grades. If a required detail (like which course) is unclear and can't be inferred, ask first.
+- Resolve relative dates ("Friday", "tomorrow") from today's date. Times are 24-hour HH:MM.
+- When planning a day, place blocks in free time after school, around existing schedule items, and use each assignment's estimated minutes (45 if none). Then say what you added.
+- For grade "what if" questions, use the course's grading method and category totals to compute the answer, and show the number.`;
+function assistantTools(log) {
+  const S = (props, req) => ({ type: 'object', properties: props, required: req });
+  const str = d => ({ type: 'string', description: d });
+  return [
+    { name: 'add_homework', description: 'Add a homework assignment to the planner. Returns the saved assignment.', inputSchema: S({ title: str('Assignment title'), course: str('Course name as listed'), dueDate: str('YYYY-MM-DD'), dueTime: str('HH:MM, optional'), priority: { type: 'string', enum: PRIORITIES }, estMinutes: { type: 'number' }, type: { type: 'string', enum: ASSIGN_CATS }, notes: str('optional') }, ['title']),
+      execute: i => { const c = i.course ? needCourse(String(i.course)) : null; const a = { id: uid(), created: Date.now(), title: String(i.title).trim(), courseId: c?.id || '', dueDate: isISO(i.dueDate) ? i.dueDate : '', dueTime: validTime(i.dueTime), priority: PRIORITIES.includes(i.priority) ? i.priority : state.settings.defaultPriority, estMin: num(i.estMinutes), category: ASSIGN_CATS.includes(i.type) ? i.type : 'Homework', status: 'Not Started', desc: i.notes ? String(i.notes) : '', tags: [] };
+        state.assignments.push(a); log.push(`Added homework: ${a.title}${c ? ' (' + c.name + ')' : ''}${a.dueDate ? ', due ' + fmtDay(a.dueDate) : ''}`); return { ok: true, id: a.id }; } },
+    { name: 'add_event', description: 'Add a test, quiz, project due date, deadline or event to the calendar.', inputSchema: S({ title: str('Title'), type: { type: 'string', enum: EVENT_TYPES }, date: str('YYYY-MM-DD'), time: str('HH:MM, optional'), course: str('optional course name') }, ['title', 'date']),
+      execute: i => { if (!isISO(i.date)) throw new Error('date must be YYYY-MM-DD'); const c = i.course ? needCourse(String(i.course)) : null; const e = { id: uid(), created: Date.now(), title: String(i.title).trim(), type: EVENT_TYPES.includes(i.type) ? i.type : 'Event', date: i.date, time: validTime(i.time), courseId: c?.id || '', notes: '' };
+        state.events.push(e); log.push(`Added ${e.type.toLowerCase()}: ${e.title}, ${fmtDay(e.date)}`); return { ok: true }; } },
+    { name: 'add_schedule_block', description: 'Add a one-time block to the schedule on a date, such as homework time, studying, practice or a meeting.', inputSchema: S({ title: str('What the block is for'), date: str('YYYY-MM-DD'), start: str('HH:MM'), end: str('HH:MM'), category: { type: 'string', enum: SCHED_CATS }, course: str('optional course name') }, ['title', 'date', 'start', 'end']),
+      execute: i => { const st = validTime(i.start), en = validTime(i.end); if (!isISO(i.date) || !st || !en || toMin(en) <= toMin(st)) throw new Error('Need a YYYY-MM-DD date and an end time after the start time'); const c = i.course ? findCourse(String(i.course)) : null;
+        const s = { id: uid(), created: Date.now(), title: String(i.title).trim(), date: i.date, start: st, end: en, category: SCHED_CATS.includes(i.category) ? i.category : 'Homework', courseId: c?.id || '', days: [], skip: [], desc: '' };
+        state.schedule.push(s); log.push(`Scheduled ${s.title}, ${fmtDay(s.date)} ${fmtTimeShort(st)}–${fmtTimeShort(en)}`); return { ok: true }; } },
+    { name: 'add_grade', description: 'Record a graded assignment in a course gradebook.', inputSchema: S({ course: str('Course name'), name: str('Assignment name'), category: str('Grade category, e.g. Test, Quiz, Homework'), earned: { type: 'number' }, possible: { type: 'number' }, date: str('YYYY-MM-DD, optional') }, ['course', 'name', 'earned', 'possible']),
+      execute: i => { const c = needCourse(String(i.course)); const e = num(i.earned), p = num(i.possible); if (e == null || !p) throw new Error('earned and possible must be numbers, possible above 0');
+        const cats = categoriesOf(c); const cat = cats.find(k => normCat(k.name) === normCat(i.category))?.name || String(i.category || 'Other');
+        state.grades.push({ id: uid(), created: Date.now(), courseId: c.id, name: String(i.name).trim(), category: cat, earned: e, possible: p, date: isISO(i.date) ? i.date : todayISO(), notes: '' }); log.push(`Recorded grade: ${i.name} ${e}/${p} in ${c.name}`); return { ok: true, newAverage: courseAvg(c, [], null, 'final') }; } },
+    { name: 'complete_homework', description: 'Mark an open assignment complete, by its id from openAssignments.', inputSchema: S({ id: str('Assignment id') }, ['id']),
+      execute: i => { const a = state.assignments.find(x => x.id === String(i.id)); if (!a) throw new Error('No assignment with that id'); a.status = 'Completed'; a.completedAt = Date.now(); log.push(`Marked complete: ${a.title}`); return { ok: true }; } },
+  ];
+}
+function mdLite(t) {
+  const lines = esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').split('\n'); let out = '', inList = false;
+  for (const l of lines) { const m = l.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)/); if (m) { if (!inList) { out += '<ul>'; inList = true; } out += `<li>${m[1]}</li>`; } else { if (inList) { out += '</ul>'; inList = false; } out += l.trim() ? `<p>${l}</p>` : ''; } }
+  return out + (inList ? '</ul>' : '');
+}
+const ASK_ERRORS = { not_granted: 'The assistant needs your OK to use Claude. Choose Allow when asked.', rate_limited: 'Too many messages at once. Wait a moment and try again.', queue_overflow: 'Too many messages at once. Wait a moment and try again.', prompt_too_large: 'The conversation got too long. Start a new chat.', session_expired: 'Your session expired. Reload the page.' };
+function viewAssistant() {
+  const sugg = ['What\'s due this week?', 'Plan my afternoon around my homework', 'Add APUSH reading chapter 6, due Friday, high priority', 'What do I need on my next test to keep an A?'];
+  return `<div class="page-head"><div><h1>Assistant</h1><p>Ask about your homework, grades and schedule, or tell it what to add.</p></div>${chat.turns.length ? '<div class="actions"><button class="btn" data-newchat>New chat</button></div>' : ''}</div>
+  <div class="chat">
+    <div class="chat-log" id="chat-log" aria-live="polite">${chat.turns.length ? chat.turns.map((t, i) => t.role === 'user' ? `<div class="msg me">${esc(t.content)}</div>` :
+      `<div class="msg ai">${t.error ? `<p style="color:var(--danger)">${esc(t.error)}</p>` : mdLite(t.content || '')}${t.pending && !t.content ? '<p class="muted">Thinking…</p>' : ''}${t.log?.length ? `<div class="did">${t.log.map(x => `<div>✓ ${esc(x)}</div>`).join('')}${t.snap && !t.undone ? `<button class="btn sm" data-undo-ai="${i}">Undo</button>` : t.undone ? '<span class="tiny muted">Undone</span>' : ''}</div>` : ''}</div>`).join('') :
+      `<div class="chat-empty">${!SAMPLE ? '<p>The assistant runs on Claude, so it works when this planner is open in Claude and you\'re signed in.</p>' : `<p class="muted">Try one of these</p><div class="sugg">${sugg.map(s => `<button class="chip-btn" data-sugg="${esc(s)}">${esc(s)}</button>`).join('')}</div>`}</div>`}</div>
+    <form class="chat-in" id="chat-form"><textarea id="chat-text" rows="1" placeholder="${SAMPLE ? 'Ask or tell your planner something' : 'Assistant unavailable here'}" aria-label="Message" ${SAMPLE ? '' : 'disabled'}>${esc(chat.draft)}</textarea>${chat.busy ? '<button type="button" class="btn" data-stopai>Stop</button>' : `<button class="btn primary" ${SAMPLE ? '' : 'disabled'}>Send</button>`}</form>
+    <p class="tiny muted" style="margin:6px 2px 0">Uses your Claude account. Changes it makes show here with an Undo.</p>
+  </div>`;
+}
+function bindAssistant() {
+  const log = $('#chat-log'); if (log) log.scrollTop = log.scrollHeight;
+  const ta = $('#chat-text');
+  if (ta) { ta.oninput = () => { chat.draft = ta.value; ta.style.height = 'auto'; ta.style.height = Math.min(160, ta.scrollHeight) + 'px'; }; ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#chat-form').requestSubmit(); } }; if (!chat.busy && SAMPLE && window.innerWidth > 860) ta.focus(); }
+  $('#chat-form').onsubmit = e => { e.preventDefault(); askAssistant(chat.draft); };
+  $$('[data-sugg]').forEach(b => b.onclick = () => askAssistant(b.dataset.sugg));
+  const st = $('[data-stopai]'); if (st) st.onclick = () => chat.ctl?.abort();
+  const nc = $('[data-newchat]'); if (nc) nc.onclick = () => { chat.ctl?.abort(); chat.turns = []; chat.draft = ''; render(); };
+  $$('[data-undo-ai]').forEach(b => b.onclick = () => { const t = chat.turns[+b.dataset.undoAi]; restore(t.snap); t.undone = true; render(); toast('Changes undone'); });
+}
+function refreshChat() { if (route().name === 'assistant') { const keep = chat.draft; render(); chat.draft = keep; } }
+async function askAssistant(text) {
+  text = String(text || '').trim(); if (!text || chat.busy || !SAMPLE) return;
+  chat.draft = ''; chat.turns.push({ role: 'user', content: text });
+  const reply = { role: 'assistant', content: '', pending: true, log: [], snap: snapshot() }; chat.turns.push(reply);
+  chat.busy = true; chat.ctl = new AbortController(); refreshChat();
+  const history = chat.turns.filter(t => t !== reply && !t.error).slice(-12).map(t => ({ role: t.role, content: t.content || '(no reply)' }));
+  const lead = { role: 'user', content: `${ASSIST_RULES}\n\nPlanner data (JSON):\n${JSON.stringify(plannerSnapshot())}` };
+  const canTools = !!SAMPLE_LIMITS?.tools; const tools = canTools ? assistantTools(reply.log) : undefined;
+  let last = 0;
+  try {
+    const res = await SAMPLE([lead, ...history], { cache: false, signal: chat.ctl.signal, tools, modelTier: 'default',
+      onText: ({ text: t }) => { reply.content = t; const now = Date.now(); if (now - last > 120) { last = now; refreshChat(); } } });
+    reply.content = res.text;
+  } catch (e) {
+    if (e && e.code === 'cancelled') { reply.content = (e.text || reply.content || '') + (reply.content ? '' : 'Stopped.'); }
+    else { reply.content = e?.text || ''; if (!reply.content) reply.error = ASK_ERRORS[e?.code] || 'Something went wrong. Try again in a moment.'; }
+  }
+  reply.pending = false; chat.busy = false;
+  if (reply.log.length) { save(); } else reply.snap = null;
+  if (route().name === 'assistant') render(); else { shell(); if (reply.log.length) toast(`Assistant made ${reply.log.length} change${reply.log.length > 1 ? 's' : ''}`); }
+}
+
+/* ========== Offline parser for pasted Schoology text ========== */
+function parseSchoologyText(text) {
+  const lines = String(text).split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const out = { courseTitle: null, overallPercent: null, categories: [], assignments: [] };
+  const scoreStart = /^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)(?!\s*\/)/; const scoreAny = /(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)(?!\s*\/)/;
+  const catRe = /^([A-Za-z][A-Za-z &\-\/]{1,40}?)\s*[:\-]?\s*\(?\s*(\d{1,3}(?:\.\d+)?)\s*%\s*\)?$/;
+  const periodRe = /^(?:(?:\d{4}\s*-\s*\d{4}\s*)?(?:quarter|marking period|semester|trimester|term)\s*\d|q[1-4]|s[12]|t[1-3]|mp\s*\d)\b/i;
+  const dateRe = /\bdue\s*(?:on\s*)?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?|\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b|\b((?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:,?\s*\d{4})?)/i;
+  const skip = /^(due|grade|grades|score|comments?|assignment|assignments|category|max points|points|overall|course grade|final grade|no grade|ungraded|\u2014|-|\u2013)$/i;
+  const toISO2 = m => {
+    if (!m) return null; const t = parseISO(todayISO()); let d;
+    if (m[1] || m[4]) { const mo = +(m[1] || m[4]), da = +(m[2] || m[5]); let y = m[3] || m[6] ? +(m[3] || m[6]) : null; if (y && y < 100) y += 2000; if (!y) { y = t.getFullYear(); if (new Date(y, mo - 1, da) - t > 45 * 864e5) y--; } d = new Date(y, mo - 1, da); }
+    else { const hasY = /\d{4}/.test(m[7]); d = new Date(m[7].replace('.', '') + (hasY ? '' : ' ' + t.getFullYear())); if (!hasY && d - t > 45 * 864e5) d.setFullYear(d.getFullYear() - 1); }
+    return isNaN(d) ? null : toISO(d);
+  };
+  let cat = null, period = null, lastName = null, lastDate = null;
+  for (const l of lines) {
+    const ov = l.match(/^(?:overall|course grade|final grade|grade)[:\s]*([\d.]+)\s*%/i); if (ov) { out.overallPercent = +ov[1]; continue; }
+    if (periodRe.test(l) && !scoreAny.test(l)) { period = l; continue; }
+    const cm = l.match(catRe); if (cm && !scoreAny.test(l)) { cat = cm[1].trim(); if (!out.categories.some(c => c.name === cat)) out.categories.push({ name: cat, weight: +cm[2] }); lastName = null; continue; }
+    const dm = l.match(dateRe); const nd = l.replace(dateRe, ' ').replace(/\s+/g, ' ').trim();
+    if (dm && nd.replace(/\b(due|at|by)\b|\d{1,2}:\d{2}\s*(am|pm)?/gi, '').trim().length < 3) { lastDate = toISO2(dm); continue; }
+    const sm = nd.match(scoreStart); const inline = !sm && nd.match(scoreAny);
+    if ((sm && lastName) || (inline && /[a-z]/i.test(nd.slice(0, inline.index)))) {
+      const m = sm || inline; const name = sm ? lastName : nd.slice(0, inline.index).replace(/\b(due|missing)\b/gi, '').trim();
+      if (name) out.assignments.push({ name, category: cat, period, earned: +m[1], possible: +m[2], date: toISO2(dm) || lastDate, status: /missing/i.test(l) ? 'missing' : 'graded' });
+      lastName = null; lastDate = null; continue;
+    }
+    if (/^(missing|excused|ex)$/i.test(l) && lastName) { const miss = /missing/i.test(l); out.assignments.push({ name: lastName, category: cat, period, earned: miss ? 0 : null, possible: null, date: lastDate, status: miss ? 'missing' : 'excused' }); lastName = null; continue; }
+    if (!skip.test(l) && /[a-z]/i.test(l) && l.length < 120 && !/^\d+(\.\d+)?\s*%$/.test(l)) { lastName = l; lastDate = dm ? toISO2(dm) : null; }
+  }
+  return out;
 }
 
 /* ========== Init ========== */
